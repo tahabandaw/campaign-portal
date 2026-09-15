@@ -105,3 +105,30 @@ export function trimAll(val: string | undefined): string {
   if (!val) return '';
   return val.trim();
 }
+
+/**
+ * Normalize date strings into standard ISO 8601 timestamps.
+ * Handles DD/MM/YYYY, DD/MM/YYYY HH:mm, standard ISO, and nullish strings.
+ */
+export function normalizeDate(val: string | null | undefined): string | null {
+  if (!val || val.trim() === '' || val === 'NULL' || val === '\\N' || val === 'none') return null;
+  const s = val.trim();
+
+  // Match DD/MM/YYYY or DD/MM/YYYY HH:mm(:ss)
+  const ddmmyyyy = /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}:\d{2}(?::\d{2})?))?$/;
+  const match = s.match(ddmmyyyy);
+  if (match) {
+    const [_, day, month, year, time] = match;
+    const isoDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    return time ? `${isoDate}T${time}:00Z` : `${isoDate}T00:00:00Z`;
+  }
+
+  try {
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return null;
+    return d.toISOString();
+  } catch {
+    return null;
+  }
+}
+

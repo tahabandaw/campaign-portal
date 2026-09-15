@@ -175,7 +175,7 @@ CREATE INDEX IF NOT EXISTS idx_import_logs_brand ON public.import_logs(brand_id)
 -- ROW LEVEL SECURITY POLICIES (THE DATA ISOLATION GUARANTEE)
 -- ============================================================
 
-CREATE OR REPLACE FUNCTION auth.user_brand_ids()
+CREATE OR REPLACE FUNCTION public.user_brand_ids()
 RETURNS SETOF UUID
 LANGUAGE sql
 STABLE
@@ -185,7 +185,7 @@ AS $$
   SELECT brand_id FROM public.brand_users WHERE user_id = auth.uid()
 $$;
 
-CREATE OR REPLACE FUNCTION auth.is_owner(check_brand_id UUID)
+CREATE OR REPLACE FUNCTION public.is_owner(check_brand_id UUID)
 RETURNS BOOLEAN
 LANGUAGE sql
 STABLE
@@ -212,7 +212,7 @@ ALTER TABLE public.import_logs   ENABLE ROW LEVEL SECURITY;
 -- BRANDS
 DROP POLICY IF EXISTS brands_select ON public.brands;
 CREATE POLICY brands_select ON public.brands
-  FOR SELECT USING (id IN (SELECT auth.user_brand_ids()));
+  FOR SELECT USING (id IN (SELECT public.user_brand_ids()));
 
 -- BRAND_USERS
 DROP POLICY IF EXISTS brand_users_select ON public.brand_users;
@@ -222,61 +222,61 @@ CREATE POLICY brand_users_select ON public.brand_users
 -- CONTACTS
 DROP POLICY IF EXISTS contacts_select ON public.contacts;
 CREATE POLICY contacts_select ON public.contacts
-  FOR SELECT USING (brand_id IN (SELECT auth.user_brand_ids()));
+  FOR SELECT USING (brand_id IN (SELECT public.user_brand_ids()));
 
 DROP POLICY IF EXISTS contacts_insert ON public.contacts;
 CREATE POLICY contacts_insert ON public.contacts
-  FOR INSERT WITH CHECK (auth.is_owner(brand_id));
+  FOR INSERT WITH CHECK (public.is_owner(brand_id));
 
 DROP POLICY IF EXISTS contacts_update ON public.contacts;
 CREATE POLICY contacts_update ON public.contacts
-  FOR UPDATE USING (auth.is_owner(brand_id));
+  FOR UPDATE USING (public.is_owner(brand_id));
 
 -- CAMPAIGNS
 DROP POLICY IF EXISTS campaigns_select ON public.campaigns;
 CREATE POLICY campaigns_select ON public.campaigns
-  FOR SELECT USING (brand_id IN (SELECT auth.user_brand_ids()));
+  FOR SELECT USING (brand_id IN (SELECT public.user_brand_ids()));
 
 DROP POLICY IF EXISTS campaigns_insert ON public.campaigns;
 CREATE POLICY campaigns_insert ON public.campaigns
-  FOR INSERT WITH CHECK (auth.is_owner(brand_id));
+  FOR INSERT WITH CHECK (public.is_owner(brand_id));
 
 DROP POLICY IF EXISTS campaigns_update ON public.campaigns;
 CREATE POLICY campaigns_update ON public.campaigns
-  FOR UPDATE USING (auth.is_owner(brand_id));
+  FOR UPDATE USING (public.is_owner(brand_id));
 
 -- EVENTS
 DROP POLICY IF EXISTS events_select ON public.events;
 CREATE POLICY events_select ON public.events
-  FOR SELECT USING (brand_id IN (SELECT auth.user_brand_ids()));
+  FOR SELECT USING (brand_id IN (SELECT public.user_brand_ids()));
 
 DROP POLICY IF EXISTS events_insert ON public.events;
 CREATE POLICY events_insert ON public.events
-  FOR INSERT WITH CHECK (auth.is_owner(brand_id));
+  FOR INSERT WITH CHECK (public.is_owner(brand_id));
 
 -- SEND_BATCHES
 DROP POLICY IF EXISTS send_batches_select ON public.send_batches;
 CREATE POLICY send_batches_select ON public.send_batches
-  FOR SELECT USING (brand_id IN (SELECT auth.user_brand_ids()));
+  FOR SELECT USING (brand_id IN (SELECT public.user_brand_ids()));
 
 DROP POLICY IF EXISTS send_batches_insert ON public.send_batches;
 CREATE POLICY send_batches_insert ON public.send_batches
-  FOR INSERT WITH CHECK (auth.is_owner(brand_id));
+  FOR INSERT WITH CHECK (public.is_owner(brand_id));
 
 DROP POLICY IF EXISTS send_batches_update ON public.send_batches;
 CREATE POLICY send_batches_update ON public.send_batches
-  FOR UPDATE USING (auth.is_owner(brand_id));
+  FOR UPDATE USING (public.is_owner(brand_id));
 
 -- CAMPAIGN_SHARES
 DROP POLICY IF EXISTS campaign_shares_select ON public.campaign_shares;
 CREATE POLICY campaign_shares_select ON public.campaign_shares
-  FOR SELECT USING (brand_id IN (SELECT auth.user_brand_ids()));
+  FOR SELECT USING (brand_id IN (SELECT public.user_brand_ids()));
 
 DROP POLICY IF EXISTS campaign_shares_insert ON public.campaign_shares;
 CREATE POLICY campaign_shares_insert ON public.campaign_shares
-  FOR INSERT WITH CHECK (auth.is_owner(brand_id));
+  FOR INSERT WITH CHECK (public.is_owner(brand_id));
 
 -- IMPORT_LOGS
 DROP POLICY IF EXISTS import_logs_select ON public.import_logs;
 CREATE POLICY import_logs_select ON public.import_logs
-  FOR SELECT USING (brand_id IN (SELECT auth.user_brand_ids()));
+  FOR SELECT USING (brand_id IN (SELECT public.user_brand_ids()));

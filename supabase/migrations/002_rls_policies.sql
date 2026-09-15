@@ -10,12 +10,12 @@
 -- ============================================================
 
 -- ============================================================
--- HELPER FUNCTIONS
+-- HELPER FUNCTIONS (IN PUBLIC SCHEMA)
 -- ============================================================
 
 -- Returns the set of brand IDs the current user belongs to.
 -- Used by every RLS policy to scope data access.
-CREATE OR REPLACE FUNCTION auth.user_brand_ids()
+CREATE OR REPLACE FUNCTION public.user_brand_ids()
 RETURNS SETOF UUID
 LANGUAGE sql
 STABLE
@@ -27,7 +27,7 @@ $$;
 
 -- Returns TRUE if the current user is an 'owner' for the given brand.
 -- Used to restrict write operations to owners only.
-CREATE OR REPLACE FUNCTION auth.is_owner(check_brand_id UUID)
+CREATE OR REPLACE FUNCTION public.is_owner(check_brand_id UUID)
 RETURNS BOOLEAN
 LANGUAGE sql
 STABLE
@@ -57,14 +57,16 @@ ALTER TABLE public.import_logs   ENABLE ROW LEVEL SECURITY;
 -- ============================================================
 -- BRANDS — users can only see brands they belong to
 -- ============================================================
+DROP POLICY IF EXISTS brands_select ON public.brands;
 CREATE POLICY brands_select ON public.brands
   FOR SELECT USING (
-    id IN (SELECT auth.user_brand_ids())
+    id IN (SELECT public.user_brand_ids())
   );
 
 -- ============================================================
 -- BRAND_USERS — users can only see their own memberships
 -- ============================================================
+DROP POLICY IF EXISTS brand_users_select ON public.brand_users;
 CREATE POLICY brand_users_select ON public.brand_users
   FOR SELECT USING (
     user_id = auth.uid()
@@ -73,87 +75,101 @@ CREATE POLICY brand_users_select ON public.brand_users
 -- ============================================================
 -- CONTACTS — scoped to user's brand(s)
 -- ============================================================
+DROP POLICY IF EXISTS contacts_select ON public.contacts;
 CREATE POLICY contacts_select ON public.contacts
   FOR SELECT USING (
-    brand_id IN (SELECT auth.user_brand_ids())
+    brand_id IN (SELECT public.user_brand_ids())
   );
 
+DROP POLICY IF EXISTS contacts_insert ON public.contacts;
 CREATE POLICY contacts_insert ON public.contacts
   FOR INSERT WITH CHECK (
-    auth.is_owner(brand_id)
+    public.is_owner(brand_id)
   );
 
+DROP POLICY IF EXISTS contacts_update ON public.contacts;
 CREATE POLICY contacts_update ON public.contacts
   FOR UPDATE USING (
-    auth.is_owner(brand_id)
+    public.is_owner(brand_id)
   );
 
 -- ============================================================
 -- CAMPAIGNS — scoped to user's brand(s)
 -- ============================================================
+DROP POLICY IF EXISTS campaigns_select ON public.campaigns;
 CREATE POLICY campaigns_select ON public.campaigns
   FOR SELECT USING (
-    brand_id IN (SELECT auth.user_brand_ids())
+    brand_id IN (SELECT public.user_brand_ids())
   );
 
+DROP POLICY IF EXISTS campaigns_insert ON public.campaigns;
 CREATE POLICY campaigns_insert ON public.campaigns
   FOR INSERT WITH CHECK (
-    auth.is_owner(brand_id)
+    public.is_owner(brand_id)
   );
 
+DROP POLICY IF EXISTS campaigns_update ON public.campaigns;
 CREATE POLICY campaigns_update ON public.campaigns
   FOR UPDATE USING (
-    auth.is_owner(brand_id)
+    public.is_owner(brand_id)
   );
 
 -- ============================================================
 -- EVENTS — scoped to user's brand(s)
 -- ============================================================
+DROP POLICY IF EXISTS events_select ON public.events;
 CREATE POLICY events_select ON public.events
   FOR SELECT USING (
-    brand_id IN (SELECT auth.user_brand_ids())
+    brand_id IN (SELECT public.user_brand_ids())
   );
 
+DROP POLICY IF EXISTS events_insert ON public.events;
 CREATE POLICY events_insert ON public.events
   FOR INSERT WITH CHECK (
-    brand_id IN (SELECT auth.user_brand_ids())
+    brand_id IN (SELECT public.user_brand_ids())
   );
 
 -- ============================================================
 -- SEND_BATCHES — select for own brand, write for owners only
 -- ============================================================
+DROP POLICY IF EXISTS send_batches_select ON public.send_batches;
 CREATE POLICY send_batches_select ON public.send_batches
   FOR SELECT USING (
-    brand_id IN (SELECT auth.user_brand_ids())
+    brand_id IN (SELECT public.user_brand_ids())
   );
 
+DROP POLICY IF EXISTS send_batches_insert ON public.send_batches;
 CREATE POLICY send_batches_insert ON public.send_batches
   FOR INSERT WITH CHECK (
-    auth.is_owner(brand_id)
+    public.is_owner(brand_id)
   );
 
+DROP POLICY IF EXISTS send_batches_update ON public.send_batches;
 CREATE POLICY send_batches_update ON public.send_batches
   FOR UPDATE USING (
-    auth.is_owner(brand_id)
+    public.is_owner(brand_id)
   );
 
 -- ============================================================
 -- CAMPAIGN_SHARES — select for own brand, create for owners only
 -- ============================================================
+DROP POLICY IF EXISTS campaign_shares_select ON public.campaign_shares;
 CREATE POLICY campaign_shares_select ON public.campaign_shares
   FOR SELECT USING (
-    brand_id IN (SELECT auth.user_brand_ids())
+    brand_id IN (SELECT public.user_brand_ids())
   );
 
+DROP POLICY IF EXISTS campaign_shares_insert ON public.campaign_shares;
 CREATE POLICY campaign_shares_insert ON public.campaign_shares
   FOR INSERT WITH CHECK (
-    auth.is_owner(brand_id)
+    public.is_owner(brand_id)
   );
 
 -- ============================================================
 -- IMPORT_LOGS — scoped to user's brand(s)
 -- ============================================================
+DROP POLICY IF EXISTS import_logs_select ON public.import_logs;
 CREATE POLICY import_logs_select ON public.import_logs
   FOR SELECT USING (
-    brand_id IN (SELECT auth.user_brand_ids())
+    brand_id IN (SELECT public.user_brand_ids())
   );

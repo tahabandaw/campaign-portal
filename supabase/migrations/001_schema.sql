@@ -13,7 +13,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- ============================================================
 -- 1. BRANDS
 -- ============================================================
-CREATE TABLE public.brands (
+CREATE TABLE IF NOT EXISTS public.brands (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   code        TEXT UNIQUE NOT NULL,   -- 'KILELE', 'KAROO', 'MARRAKECH'
   name        TEXT NOT NULL,          -- 'Kilele Rides', 'Karoo Coaches', 'Marrakech Express'
@@ -25,7 +25,7 @@ CREATE TABLE public.brands (
 -- ============================================================
 -- 2. BRAND_USERS — Maps auth.users to brands with roles
 -- ============================================================
-CREATE TABLE public.brand_users (
+CREATE TABLE IF NOT EXISTS public.brand_users (
   id        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id   UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   brand_id  UUID NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
@@ -34,13 +34,13 @@ CREATE TABLE public.brand_users (
 );
 
 -- Index for fast RLS lookups
-CREATE INDEX idx_brand_users_user_id ON public.brand_users(user_id);
-CREATE INDEX idx_brand_users_brand_id ON public.brand_users(brand_id);
+CREATE INDEX IF NOT EXISTS idx_brand_users_user_id ON public.brand_users(user_id);
+CREATE INDEX IF NOT EXISTS idx_brand_users_brand_id ON public.brand_users(brand_id);
 
 -- ============================================================
 -- 3. CONTACTS
 -- ============================================================
-CREATE TABLE public.contacts (
+CREATE TABLE IF NOT EXISTS public.contacts (
   id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id            UUID NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
   external_id         TEXT NOT NULL,
@@ -65,7 +65,7 @@ CREATE TABLE public.contacts (
 -- ============================================================
 -- 4. CAMPAIGNS
 -- ============================================================
-CREATE TABLE public.campaigns (
+CREATE TABLE IF NOT EXISTS public.campaigns (
   id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id            UUID NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
   external_id         TEXT NOT NULL,
@@ -89,7 +89,7 @@ CREATE TABLE public.campaigns (
 -- ============================================================
 -- 5. EVENTS — Engagement/delivery telemetry
 -- ============================================================
-CREATE TABLE public.events (
+CREATE TABLE IF NOT EXISTS public.events (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id              UUID NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
   event_id              TEXT NOT NULL,
@@ -106,7 +106,7 @@ CREATE TABLE public.events (
 -- ============================================================
 -- 6. SEND_BATCHES — Tracks sends through the messaging provider
 -- ============================================================
-CREATE TABLE public.send_batches (
+CREATE TABLE IF NOT EXISTS public.send_batches (
   id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id            UUID NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
   campaign_id         UUID NOT NULL REFERENCES public.campaigns(id) ON DELETE CASCADE,
@@ -133,7 +133,7 @@ CREATE TABLE public.send_batches (
 -- ============================================================
 -- 7. CAMPAIGN_SHARES — Password-protected public share links
 -- ============================================================
-CREATE TABLE public.campaign_shares (
+CREATE TABLE IF NOT EXISTS public.campaign_shares (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   campaign_id   UUID NOT NULL REFERENCES public.campaigns(id) ON DELETE CASCADE,
   brand_id      UUID NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
@@ -147,7 +147,7 @@ CREATE TABLE public.campaign_shares (
 -- ============================================================
 -- 8. IMPORT_LOGS — Tracks data loading results
 -- ============================================================
-CREATE TABLE public.import_logs (
+CREATE TABLE IF NOT EXISTS public.import_logs (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id        UUID REFERENCES public.brands(id) ON DELETE SET NULL,
   file_name       TEXT NOT NULL,

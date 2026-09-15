@@ -16,6 +16,9 @@
  *   Lines: ALL
  */
 
+import 'dotenv/config';
+import dns from 'node:dns';
+dns.setDefaultResultOrder('ipv4first');
 import { describe, it, expect, beforeAll } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 

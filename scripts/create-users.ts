@@ -1,4 +1,6 @@
 import 'dotenv/config';
+import dns from 'node:dns';
+dns.setDefaultResultOrder('ipv4first');
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;

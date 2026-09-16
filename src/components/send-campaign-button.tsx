@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { formatNumber } from '@/lib/utils';
 
 interface SendCampaignButtonProps {
@@ -12,6 +13,7 @@ interface SendCampaignButtonProps {
 }
 
 export function SendCampaignButton({ campaignId, campaignName, channel, isOwner, hasPendingSend }: SendCampaignButtonProps) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
@@ -63,7 +65,11 @@ export function SendCampaignButton({ campaignId, campaignName, channel, isOwner,
       }
       const data = await res.json();
       setSuccessMsg(`Campaign queued. Batch ID: ${data.batch_id}`);
-      setTimeout(() => setIsOpen(false), 3000);
+      router.refresh();
+      setTimeout(() => {
+        setIsOpen(false);
+        router.refresh();
+      }, 2500);
     } catch (err: any) {
       setError(err.message || 'An error occurred while sending');
       setSending(false);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface ShareResultsButtonProps {
   campaignId: string;
@@ -8,6 +9,7 @@ interface ShareResultsButtonProps {
 }
 
 export function ShareResultsButton({ campaignId, isOwner }: ShareResultsButtonProps) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,6 +40,7 @@ export function ShareResultsButton({ campaignId, isOwner }: ShareResultsButtonPr
       }
       const data = await res.json();
       setShareUrl(data.url);
+      router.refresh();
     } catch (err: any) {
       setError(err.message || 'An error occurred');
     } finally {

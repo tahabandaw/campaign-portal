@@ -77,7 +77,7 @@ export default function PortalLayout({
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Contacts", href: "/contacts", icon: Users },
     { name: "Campaigns", href: "/campaigns", icon: Megaphone },
-    { name: "Import Log", href: "/import-log", icon: FileUp },
+    { name: "Import Log", href: "/imports", icon: FileUp },
   ];
 
   if (loading) {

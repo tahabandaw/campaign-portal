@@ -37,29 +37,42 @@ export default async function DashboardPage() {
   const brandId = brandUser.brand_id;
   const brand = (brandUser as any).brands;
 
-  // 3. Fetch Total Customers
-  const { count: totalCustomers } = await supabase
-    .from("contacts")
-    .select("id", { count: "exact", head: true })
-    .eq("brand_id", brandId)
-    .is("deleted_at", null);
-
-  // 4. Fetch Contactable Customers (active, marketing consent true, not deleted, not suppressed)
-  const now = new Date().toISOString();
-  const { count: contactableCustomers } = await supabase
-    .from("contacts")
-    .select("id", { count: "exact", head: true })
-    .eq("brand_id", brandId)
-    .is("deleted_at", null)
-    .eq("status", "active")
-    .eq("consent_marketing", true);
-
-  // 5. Fetch Campaigns
-  const { data: campaigns } = await supabase
-    .from("campaigns")
-    .select("*")
-    .eq("brand_id", brandId)
-    .order("sent_at_utc", { ascending: false });
+  // 3. Fetch all independent data in PARALLEL (was: 4 sequential awaits → ~4x slower)
+  const [
+    { count: totalCustomers },
+    { count: contactableCustomers },
+    { data: campaigns },
+    { data: signups },
+  ] = await Promise.all([
+    // Total Customers
+    supabase
+      .from("contacts")
+      .select("id", { count: "exact", head: true })
+      .eq("brand_id", brandId)
+      .is("deleted_at", null),
+    // Contactable Customers
+    supabase
+      .from("contacts")
+      .select("id", { count: "exact", head: true })
+      .eq("brand_id", brandId)
+      .is("deleted_at", null)
+      .eq("status", "active")
+      .eq("consent_marketing", true),
+    // Campaigns
+    supabase
+      .from("campaigns")
+      .select("*")
+      .eq("brand_id", brandId)
+      .order("sent_at_utc", { ascending: false }),
+    // Signups for chart (limit 2000)
+    supabase
+      .from("contacts")
+      .select("signup_at")
+      .eq("brand_id", brandId)
+      .not("signup_at", "is", null)
+      .order("signup_at", { ascending: false })
+      .limit(2000),
+  ]);
 
   const totalCampaigns = campaigns?.length || 0;
   const totalSpend = campaigns?.reduce((sum, c) => sum + (Number(c.spend) || 0), 0) || 0;
@@ -73,16 +86,7 @@ export default async function DashboardPage() {
     ? (contactableCustomers / totalCustomers)
     : 0;
 
-  // 6. Fetch Signups for activity chart (sample recent 2000 signups)
-  const { data: signups } = await supabase
-    .from("contacts")
-    .select("signup_at")
-    .eq("brand_id", brandId)
-    .not("signup_at", "is", null)
-    .order("signup_at", { ascending: false })
-    .limit(2000);
-
-  // Aggregate by date (YYYY-MM-DD)
+  // Aggregate signups by date (YYYY-MM-DD)
   const dateCounts: Record<string, number> = {};
   (signups || []).forEach((row) => {
     if (row.signup_at) {
@@ -94,7 +98,7 @@ export default async function DashboardPage() {
   const chartData = Object.entries(dateCounts)
     .map(([date, count]) => ({ date, count }))
     .sort((a, b) => a.date.localeCompare(b.date))
-    .slice(-30); // show last 30 active days
+    .slice(-30);
 
   return (
     <div className="space-y-8">

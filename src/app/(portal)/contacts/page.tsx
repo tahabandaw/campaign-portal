@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
-import { formatNumber, formatDate } from '@/lib/utils';
+import { formatNumber } from '@/lib/utils';
 import { ContactsTable } from '@/components/contacts-table';
+import { Suspense } from 'react';
+import { Loader2 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,11 +18,12 @@ interface PageProps {
 const PAGE_SIZE = 50;
 
 export default async function ContactsPage({ searchParams }: PageProps) {
-  const params = await searchParams;
-  const page = Math.max(1, parseInt(params.page || '1'));
-  const search = params.search || '';
-  const statusFilter = params.status || '';
-  const consentFilter = params.consent || '';
+  const params = (await searchParams) ?? {};
+  const rawPage = parseInt(params.page || '1', 10);
+  const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
+  const search = (params.search || '').trim();
+  const statusFilter = (params.status || '').trim();
+  const consentFilter = (params.consent || '').trim();
 
   const supabase = await createClient();
 
@@ -78,16 +81,22 @@ export default async function ContactsPage({ searchParams }: PageProps) {
         </p>
       </div>
 
-      <ContactsTable
-        contacts={contacts || []}
-        totalCount={count || 0}
-        currentPage={page}
-        totalPages={totalPages}
-        pageSize={PAGE_SIZE}
-        search={search}
-        statusFilter={statusFilter}
-        consentFilter={consentFilter}
-      />
+      <Suspense fallback={
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      }>
+        <ContactsTable
+          contacts={contacts || []}
+          totalCount={count || 0}
+          currentPage={page}
+          totalPages={totalPages}
+          pageSize={PAGE_SIZE}
+          search={search}
+          statusFilter={statusFilter}
+          consentFilter={consentFilter}
+        />
+      </Suspense>
     </div>
   );
 }

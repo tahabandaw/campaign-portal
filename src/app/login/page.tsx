@@ -1,22 +1,26 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState, Suspense } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { Loader2, LogIn } from "lucide-react";
 
-function LoginForm() {
+export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const urlError = searchParams.get("error");
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(
-    urlError === "unauthorized" ? "You do not have access to this portal." : ""
-  );
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("error") === "unauthorized") {
+        setError("You do not have access to this portal.");
+      }
+    }
+  }, []);
 
   const supabase = createClient();
 
@@ -179,7 +183,7 @@ function LoginForm() {
             <button
               type="button"
               onClick={() => fillCredentials("kilele.owner@vg-eval.test", "KileleOwner123!")}
-              className="px-2 py-1 bg-muted hover:bg-muted/80 rounded border text-center transition-colors truncate"
+              className="px-2 py-1 bg-muted hover:bg-muted/80 rounded border text-center transition-colors truncate cursor-pointer"
               title="Kilele Owner"
             >
               Kilele Owner
@@ -187,7 +191,7 @@ function LoginForm() {
             <button
               type="button"
               onClick={() => fillCredentials("karoo.owner@vg-eval.test", "KarooOwner123!")}
-              className="px-2 py-1 bg-muted hover:bg-muted/80 rounded border text-center transition-colors truncate"
+              className="px-2 py-1 bg-muted hover:bg-muted/80 rounded border text-center transition-colors truncate cursor-pointer"
               title="Karoo Owner"
             >
               Karoo Owner
@@ -195,7 +199,7 @@ function LoginForm() {
             <button
               type="button"
               onClick={() => fillCredentials("marrakech.owner@vg-eval.test", "MarrakechOwner123!")}
-              className="px-2 py-1 bg-muted hover:bg-muted/80 rounded border text-center transition-colors truncate"
+              className="px-2 py-1 bg-muted hover:bg-muted/80 rounded border text-center transition-colors truncate cursor-pointer"
               title="Marrakech Owner"
             >
               Marrakech
@@ -204,19 +208,5 @@ function LoginForm() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      }
-    >
-      <LoginForm />
-    </Suspense>
   );
 }

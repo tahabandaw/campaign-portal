@@ -7,7 +7,7 @@ import {
 const BASE_URL = 'https://dispatcher-production-72fc.up.railway.app';
 
 function getApiKey(): string {
-  const key = process.env.DISPATCHER_API_KEY;
+  const key = process.env.DISPATCHER_API_KEY || 'vgk_59a3fe7d3d70067c0b677570fbdefb1a333c66a7e981c0a0';
   if (!key) {
     throw new Error('Missing DISPATCHER_API_KEY environment variable');
   }

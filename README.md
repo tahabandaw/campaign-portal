@@ -1,148 +1,129 @@
-# Velocity Growth — Client Campaign Portal
+# Campaign Portal
 
-A multi-tenant campaign and marketing growth management portal built for Velocity Growth. Supports three distinct brands (**Kilele Rides**, **Karoo Coaches**, and **Marrakech Express**) running in one database under complete, cryptographically and policy-guaranteed data isolation.
-
----
-
-## 📋 Submission Details
-
-- **Live URL**: [https://campaign-portal.taha-bando66.workers.dev](https://campaign-portal.taha-bando66.workers.dev)
-- **GitHub Repository**: [https://github.com/tahabandaw/campaign-portal](https://github.com/tahabandaw/campaign-portal)
-- **Supabase Project URL**: `https://pvwaujpkamfljnqwoihz.supabase.co`
-
-### 1. The Six Test Logins
-
-| Brand | Market | Role | Email | Password | Permissions |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Kilele Rides** | Kenya (UTC+3) | Owner | `kilele.owner@vg-eval.test` | `KileleOwner123!` | View data, dispatch sends, create shares |
-| **Kilele Rides** | Kenya (UTC+3) | Analyst | `kilele.analyst@vg-eval.test` | `KileleAnalyst123!` | View-only (Send & Share disabled) |
-| **Karoo Coaches** | South Africa (UTC+2) | Owner | `karoo.owner@vg-eval.test` | `KarooOwner123!` | View data, dispatch sends, create shares |
-| **Karoo Coaches** | South Africa (UTC+2) | Analyst | `karoo.analyst@vg-eval.test` | `KarooAnalyst123!` | View-only (Send & Share disabled) |
-| **Marrakech Express**| Morocco (UTC+1) | Owner | `marrakech.owner@vg-eval.test` | `MarrakechOwner123!` | View data, dispatch sends, create shares |
-| **Marrakech Express**| Morocco (UTC+1) | Analyst | `marrakech.analyst@vg-eval.test` | `MarrakechAnalyst123!` | View-only (Send & Share disabled) |
-
-*Google OAuth sign-in is supported via Supabase Auth using the same authenticated domains/accounts.*
-
-### 2. Provider API Key
-`vgk_59a3fe7d3d70067c0b677570fbdefb1a333c66a7e981c0a0`
-
-### 3. Campaign Send Tracking
-- **Where Recorded**: Outgoing campaign dispatches are tracked in `send_batches` table with unique `idempotency_key`, `batch_key` (the provider's batch ID), `recipient_count`, `approved_by`, `approved_at`, `provider_accepted`, and `provider_rejected`.
-- **Event Telemetry**: Delivered, bounced, opened, and unsubscribed events returned by the dispatcher are ingested into the `events` table.
-- **Contact State Sync**: Bounced or unsubscribed events immediately update the contact's `status` column in `contacts` (`'bounced'` / `'unsubscribed'`), ensuring contactable counts reflect reality.
+A multi-tenant campaign management and marketing analytics service designed to host multiple client brands within a single database while guaranteeing strict, policy-enforced data isolation.
 
 ---
 
-## 🔒 The Data Isolation Guarantee
+## 📌 Architecture & Features
 
-### Where It Lives
-- **Database Schema**: [`schema.sql`](./schema.sql) and [`supabase/migrations/002_rls_policies.sql`](./supabase/migrations/002_rls_policies.sql) (Lines 23–140).
-- **Core Mechanism**: 
-  1. **Row Level Security (RLS)** is enabled on all tables (`contacts`, `campaigns`, `events`, `send_batches`, `campaign_shares`, `import_logs`, `brand_users`, `brands`).
-  2. The security-definer helper function `auth.user_brand_ids()` dynamically resolves the authenticated user's tenant membership:
-     ```sql
-     CREATE OR REPLACE FUNCTION auth.user_brand_ids()
-     RETURNS SETOF UUID LANGUAGE sql STABLE SECURITY DEFINER AS $$
-       SELECT brand_id FROM public.brand_users WHERE user_id = auth.uid()
-     $$;
-     ```
-  3. Every tenant table checks `brand_id IN (SELECT auth.user_brand_ids())`.
-  4. Write operations enforce `auth.is_owner(brand_id)`.
-  5. Compound Unique Keys (`brand_id, external_id`) prevent cross-brand ID collisions (`CT-000050` can exist simultaneously in all three brands without overwriting or leaking).
-
-### The Test That Fails If Isolation Is Removed
-- **Test File**: [`__tests__/data-isolation.test.ts`](./__tests__/data-isolation.test.ts)
-- Verifies that:
-  - Kilele users receive zero rows when requesting Karoo or Marrakech data.
-  - Direct unauthenticated Supabase queries with anon keys return zero rows.
-  - Analysts cannot insert into `send_batches` or create `campaign_shares`.
-  - An owner of Brand A cannot insert or update records tagged with Brand B.
+- **Multi-Tenant Isolation**: Complete database-level tenant isolation using PostgreSQL Row Level Security (RLS) policies and compound unique constraints `(brand_id, external_id)`.
+- **Role-Based Access Control**:
+  - **Owner**: Full access to view telemetry, dispatch campaigns, and generate secure public share links.
+  - **Analyst**: View-only access to campaign analytics, contacts, and import history.
+- **Data Ingestion Pipeline**: Ingestion and cleaning engine handling CSV delimiter detection (`;` vs `,`), European decimal parsing, dirty status values, and boolean variations.
+- **Campaign Dispatching & Idempotency**: Atomic send queueing with unique idempotency keys preventing duplicate dispatches and race conditions.
+- **Public Campaign Results Sharing**: Granular, password-protected public share links hashed with salted bcrypt (10 rounds) exposing aggregate telemetry without brand or contact leakage.
+- **Responsive Client Experience**: Mobile-first design featuring touch targets, adaptive card views for small viewports, and full desktop data tables.
 
 ---
 
-## 🛠️ Data Quality Handling & Seed Pipeline
+## 🛠️ Tech Stack
 
-During data ingestion, the automated pipeline in [`scripts/normalize.ts`](./scripts/normalize.ts) and [`scripts/seed.ts`](./scripts/seed.ts) resolved 15+ deliberate edge cases:
-
-1. **Delimiter Variations**: Auto-detected `;` vs `,` (Marrakech files use semicolons).
-2. **European Decimals**: Parsed `221,09` and `1.420,00` spend values to standard floats without corrupting standard decimal points.
-3. **Column Mapping**: Normalized Karoo Title Case headers (`Full Name`, `External Id`, `Signup At`) and Marrakech French headers (`pays` $\rightarrow$ `country`, `e_mail` $\rightarrow$ `email`, `mobile` $\rightarrow$ `phone`).
-4. **Boolean Pollution**: Normalized 10+ variations in `consent_marketing` (`true`, `TRUE`, `1`, `Y`, `yes`, `active`, `false`, `FALSE`, `0`, `no`, `f`, `n`, `""`).
-5. **Data Misalignment**: Detected ~20 records where dates leaked into the `status` column and safely flagged them as `'unknown'` while preserving row integrity.
-6. **Compound Key Deduplication**: Prevented collisions for duplicate campaign rows (`KIL-0044`, `CMP-014`) and identical contact IDs across brands (`CT-000050`).
-7. **CDC Delta File**: Ingested `kilele-contacts-delta-2026-09-01.csv` as an UPSERT pass (2,500 updates to existing contacts and 1,681 newly acquired contacts).
-8. **Auditable Import Log**: The `/imports` page in the portal shows total rows, imported, skipped, and detailed error/warning lists for complete transparency.
+- **Framework**: [Next.js](https://nextjs.org/) (App Router, Server Components & Streaming)
+- **Database & Auth**: [Supabase](https://supabase.com/) (PostgreSQL, Row Level Security, Auth)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/), [Lucide React](https://lucide.dev/)
+- **Deployment**: [Cloudflare Workers](https://workers.cloudflare.com/) via `@opennextjs/cloudflare`
+- **Testing**: [Vitest](https://vitest.dev/)
 
 ---
 
-## 📊 Dashboard Methodology & Number Explanation
+## 📋 Prerequisites
 
-### Contactable Customers Definition
-> **Contactable** = `status = 'active'` AND `consent_marketing = true` AND `deleted_at IS NULL` AND (`suppressed_until IS NULL` OR `suppressed_until < now()`).  
-> *Contacts who registered an 'unsubscribe' event have their status transitioned to 'unsubscribed' and are excluded.*
-
-### Number We Are Least Sure About
-- **Reported Opens on Historical Campaigns**: In `kilele-campaigns.csv`, several campaigns (e.g. `KIL-0016`) show `reported_opens` (12,679) exceeding `reported_delivered` (10,108). This is explicitly noted in the UI: *"Open counts represent gross engagement events and may exceed delivered counts when individual recipients open a message multiple times."*
+- **Node.js**: `v20+` or `v22+`
+- **npm**: `v10+`
+- A configured **Supabase** project
 
 ---
 
-## 🚀 Running Locally
+## 🚀 Getting Started
 
-### 1. Install Dependencies
+### 1. Clone & Install Dependencies
+
 ```bash
+git clone https://github.com/tahabandaw/campaign-portal.git
+cd campaign-portal
 npm install
 ```
 
-### 2. Environment Variables
-Create `.env.local`:
+### 2. Configure Environment Variables
+
+Create `.env.local` using the template from `.env.example`:
+
+```bash
+cp .env.example .env.local
+```
+
+Configure your environment variables:
+
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-DISPATCHER_API_KEY=vgk_59a3fe7d3d70067c0b677570fbdefb1a333c66a7e981c0a0
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+
+# Messaging Provider API Configuration
+DISPATCHER_API_KEY=your_dispatcher_api_key
+
+# Cron / Automation Secret
 CRON_SECRET=your_cron_secret_token
 ```
 
-### 3. Database Migration & Seed
-Run `schema.sql` inside your Supabase SQL Editor, then execute:
+### 3. Database Migration & Data Seeding
+
+1. Execute [`schema.sql`](./schema.sql) in your Supabase SQL Editor to provision tables, indexes, and Row Level Security policies.
+2. Ingest seed data and provision user roles:
+
 ```bash
+# Seed brands, contacts, campaigns, events, and send logs
 npx tsx scripts/seed.ts
+
+# Create application users and brand assignments
 npx tsx scripts/create-users.ts
 ```
 
-### 4. Run Tests
-```bash
-npx vitest run
-```
+### 4. Run the Development Server
 
-### 5. Start Application
 ```bash
 npm run dev
 ```
 
----
-
-## 🤖 Engineering & Tooling Note
-- **AI Tools Used**: Antigravity (Google DeepMind) pairing assistant.
-- **Architecture**: Next.js 14 App Router, TypeScript, Tailwind CSS, Supabase PostgreSQL with RLS, Vitest.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 📝 Candidate Reflection Note (286 words)
+## 🧪 Testing
 
-### 1. What I tried to break before sending
-I stress-tested tenant boundaries, concurrent dispatches, and data ingress:
-- **Cross-brand injection**: Tested authenticated Kilele sessions attempting to read, update, or insert Karoo/Marrakech records (`__tests__/data-isolation.test.ts`). RLS blocked 100% of attempts with empty result sets or permission violations.
-- **Race conditions & double sends**: Tested simultaneous dispatches to `/api/campaigns/[id]/send` with identical idempotency keys (`__tests__/send-idempotency.test.ts`). The database lock rejects concurrent dispatches with `409 Conflict`.
-- **Public share tampering**: Attacked `/share/[token]` with brute-force attempts; verified passwords use salted bcrypt (10 rounds) and wrong attempts trigger cooldown delays (`__tests__/share-link-security.test.ts`).
-- **Data corruption**: Tested 15 dirty data edge cases (European decimal commas, French/TitleCase headers, dates in status columns, cross-brand ID collisions).
+The automated test suite verifies tenant isolation, dispatch idempotency, password hashing security, and data cleaning utilities:
 
-### 2. Where the data-isolation guarantee lives
-- **Primary**: [`supabase/migrations/002_rls_policies.sql`](./supabase/migrations/002_rls_policies.sql) (Lines 18–176) and consolidated [`schema.sql`](./schema.sql) (Lines 142–268). Every table enforces RLS via `brand_id IN (SELECT public.user_brand_ids())`.
-- **Secondary**: Compound unique constraints `(brand_id, external_id)` in [`schema.sql`](./schema.sql) (Lines 55, 86, 107) ensuring identical external IDs (e.g., `CT-000050`) never collide across brands.
+```bash
+npm test
+# or
+npx vitest run
+```
 
-### 3. Which number on your screens I am least sure about
-`reported_opens` on historical campaigns (e.g., Kilele's `KIL-0016` has 12,679 opens vs 10,108 delivered). Because open tracking measures gross pixel interaction events, repeated recipient opens or privacy prefetching (Apple MPP) inflate gross counts beyond unique delivered recipients. This is explicitly noted in the UI methodology banner.
+---
 
-### 4. What isn't finished
-Real-time inbound webhook ingestion (`POST /api/webhooks/dispatcher`) currently relies on background cron polling (`/api/cron/poll-events`); implementing provider webhook receiver with HMAC signature verification would provide sub-second telemetry over scheduled polling.
+## 📦 Production Build & Deployment
+
+### Local Production Build
+
+```bash
+npm run build:next
+npm run start
+```
+
+### Deploy to Cloudflare Workers
+
+```bash
+npm run deploy:cloudflare
+```
+
+*(Configure runtime secrets such as `SUPABASE_SERVICE_ROLE_KEY` and `DISPATCHER_API_KEY` in your Cloudflare dashboard under Workers & Pages Settings).*
+
+---
+
+## 🔒 Security & Data Isolation Architecture
+
+- **Row Level Security**: All database tables (`contacts`, `campaigns`, `events`, `send_batches`, `campaign_shares`, `import_logs`) enforce RLS through `auth.user_brand_ids()`.
+- **Compound Keys**: Constraints like `UNIQUE(brand_id, external_id)` ensure external identifiers across tenants never collide or overwrite each other.
+- **Client Security**: The front-end operates strictly with the Supabase anon key and session tokens; service role capabilities are restricted to administrative scripts and cron tasks.

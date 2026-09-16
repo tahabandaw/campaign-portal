@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
 import { sendMessages } from '@/lib/messaging-provider';
 import type { DispatcherRecipient, DispatcherSendRequest } from '@/lib/types';
 
@@ -17,7 +16,6 @@ export async function POST(
     }
 
     const supabase = await createClient();
-    const adminSupabase = createAdminClient();
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -45,7 +43,7 @@ export async function POST(
       return NextResponse.json({ error: 'Must be brand owner to send campaign' }, { status: 403 });
     }
 
-    const { data: existingBatches } = await adminSupabase
+    const { data: existingBatches } = await supabase
       .from('send_batches')
       .select('id, status')
       .eq('campaign_id', id)
@@ -55,7 +53,7 @@ export async function POST(
       return NextResponse.json({ error: 'A send batch is already in progress for this campaign' }, { status: 409 });
     }
 
-    let query = adminSupabase
+    let query = supabase
       .from('contacts')
       .select('external_id, email, phone')
       .eq('brand_id', campaign.brand_id)
@@ -75,7 +73,7 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to fetch recipients' }, { status: 500 });
     }
 
-    const { data: batch, error: batchError } = await adminSupabase
+    const { data: batch, error: batchError } = await supabase
       .from('send_batches')
       .insert({
         brand_id: campaign.brand_id,
@@ -111,7 +109,7 @@ export async function POST(
       const acceptedCount = Array.isArray(response.accepted) ? response.accepted.length : 0;
       const rejectedCount = Array.isArray(response.rejected) ? response.rejected.length : 0;
 
-      await adminSupabase
+      await supabase
         .from('send_batches')
         .update({
           batch_key: response.batch_id,
@@ -129,7 +127,7 @@ export async function POST(
         rejected: rejectedCount
       });
     } catch (sendError: any) {
-      await adminSupabase
+      await supabase
         .from('send_batches')
         .update({
           status: 'failed',

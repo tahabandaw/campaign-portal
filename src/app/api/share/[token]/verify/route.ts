@@ -37,7 +37,7 @@ export async function POST(
 
     const { data: campaign, error: campaignError } = await adminSupabase
       .from('campaigns')
-      .select('name, channel, reported_sent, reported_delivered, reported_bounced, reported_opens, reported_clicks, reported_spend, created_at')
+      .select('campaign_name, channel, reported_sent, reported_delivered, reported_bounced, reported_opens, reported_clicks, spend, sent_at_utc, created_at')
       .eq('id', share.campaign_id)
       .single();
 
@@ -46,7 +46,7 @@ export async function POST(
     }
 
     return NextResponse.json({
-      campaign_name: campaign.name,
+      campaign_name: campaign.campaign_name,
       channel: campaign.channel,
       metrics: {
         sent: campaign.reported_sent || 0,
@@ -54,9 +54,9 @@ export async function POST(
         bounced: campaign.reported_bounced || 0,
         opens: campaign.reported_opens || 0,
         clicks: campaign.reported_clicks || 0,
-        spend: campaign.reported_spend || 0,
+        spend: campaign.spend || 0,
       },
-      sent_at: campaign.created_at,
+      sent_at: campaign.sent_at_utc || campaign.created_at,
     });
 
   } catch (error) {

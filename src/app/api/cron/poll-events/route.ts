@@ -31,6 +31,11 @@ export async function GET(request: Request) {
         let cursor = batch.last_event_cursor;
         let hasMore = true;
         
+        let delivered = batch.delivered_count || 0;
+        let bounced = batch.bounced_count || 0;
+        let opened = batch.opened_count || 0;
+        let unsubscribed = batch.unsubscribed_count || 0;
+
         while (hasMore) {
           const response = await getEvents(batch.batch_key, cursor);
           
@@ -46,12 +51,18 @@ export async function GET(request: Request) {
                 occurred_at_utc: event.occurred_at,
               }, { onConflict: 'brand_id,event_id' });
 
-              if (event.event_type === 'bounced') {
+              if (event.event_type === 'delivered') {
+                delivered++;
+              } else if (event.event_type === 'bounced') {
+                bounced++;
                 await adminSupabase.from('contacts')
                   .update({ status: 'bounced' })
                   .eq('external_id', event.recipient_id)
                   .eq('brand_id', batch.brand_id);
+              } else if (event.event_type === 'opened') {
+                opened++;
               } else if (event.event_type === 'unsubscribed') {
+                unsubscribed++;
                 await adminSupabase.from('contacts')
                   .update({ status: 'unsubscribed' })
                   .eq('external_id', event.recipient_id)
@@ -67,9 +78,22 @@ export async function GET(request: Request) {
         await adminSupabase.from('send_batches')
           .update({
             last_event_cursor: cursor,
-            last_event_poll_at: new Date().toISOString()
+            last_event_poll_at: new Date().toISOString(),
+            delivered_count: delivered,
+            bounced_count: bounced,
+            opened_count: opened,
+            unsubscribed_count: unsubscribed,
           })
           .eq('id', batch.id);
+
+        // Also update campaign aggregate metrics
+        await adminSupabase.from('campaigns')
+          .update({
+            reported_delivered: delivered,
+            reported_bounced: bounced,
+            reported_opens: opened,
+          })
+          .eq('id', batch.campaign_id);
 
         processedCount++;
       } catch (err) {

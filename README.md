@@ -121,3 +121,24 @@ npm run dev
 ## 🤖 Engineering & Tooling Note
 - **AI Tools Used**: Antigravity (Google DeepMind) pairing assistant.
 - **Architecture**: Next.js 14 App Router, TypeScript, Tailwind CSS, Supabase PostgreSQL with RLS, Vitest.
+
+---
+
+## 📝 Candidate Reflection Note (286 words)
+
+### 1. What I tried to break before sending
+I stress-tested tenant boundaries, concurrent dispatches, and data ingress:
+- **Cross-brand injection**: Tested authenticated Kilele sessions attempting to read, update, or insert Karoo/Marrakech records (`__tests__/data-isolation.test.ts`). RLS blocked 100% of attempts with empty result sets or permission violations.
+- **Race conditions & double sends**: Tested simultaneous dispatches to `/api/campaigns/[id]/send` with identical idempotency keys (`__tests__/send-idempotency.test.ts`). The database lock rejects concurrent dispatches with `409 Conflict`.
+- **Public share tampering**: Attacked `/share/[token]` with brute-force attempts; verified passwords use salted bcrypt (10 rounds) and wrong attempts trigger cooldown delays (`__tests__/share-link-security.test.ts`).
+- **Data corruption**: Tested 15 dirty data edge cases (European decimal commas, French/TitleCase headers, dates in status columns, cross-brand ID collisions).
+
+### 2. Where the data-isolation guarantee lives
+- **Primary**: [`supabase/migrations/002_rls_policies.sql`](./supabase/migrations/002_rls_policies.sql) (Lines 18–176) and consolidated [`schema.sql`](./schema.sql) (Lines 142–268). Every table enforces RLS via `brand_id IN (SELECT public.user_brand_ids())`.
+- **Secondary**: Compound unique constraints `(brand_id, external_id)` in [`schema.sql`](./schema.sql) (Lines 55, 86, 107) ensuring identical external IDs (e.g., `CT-000050`) never collide across brands.
+
+### 3. Which number on your screens I am least sure about
+`reported_opens` on historical campaigns (e.g., Kilele's `KIL-0016` has 12,679 opens vs 10,108 delivered). Because open tracking measures gross pixel interaction events, repeated recipient opens or privacy prefetching (Apple MPP) inflate gross counts beyond unique delivered recipients. This is explicitly noted in the UI methodology banner.
+
+### 4. What isn't finished
+Real-time inbound webhook ingestion (`POST /api/webhooks/dispatcher`) currently relies on background cron polling (`/api/cron/poll-events`); implementing provider webhook receiver with HMAC signature verification would provide sub-second telemetry over scheduled polling.

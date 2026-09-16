@@ -17,7 +17,7 @@ export async function GET(
     // Get campaign
     const { data: campaign, error: campaignError } = await supabase
       .from('campaigns')
-      .select('id, brand_id, name, channel, target_country')
+      .select('id, brand_id, campaign_name, channel, target_country')
       .eq('id', id)
       .single();
 
@@ -48,7 +48,7 @@ export async function GET(
 
     return NextResponse.json({
       count,
-      campaign_name: campaign.name,
+      campaign_name: campaign.campaign_name,
       channel: campaign.channel,
       target_country: campaign.target_country,
     });

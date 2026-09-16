@@ -6,6 +6,10 @@ A multi-tenant campaign and marketing growth management portal built for Velocit
 
 ## 📋 Submission Details
 
+- **Live URL**: [https://campaign-portal.taha-bando66.workers.dev](https://campaign-portal.taha-bando66.workers.dev)
+- **GitHub Repository**: [https://github.com/tahabandaw/campaign-portal](https://github.com/tahabandaw/campaign-portal)
+- **Supabase Project URL**: `https://pvwaujpkamfljnqwoihz.supabase.co`
+
 ### 1. The Six Test Logins
 
 | Brand | Market | Role | Email | Password | Permissions |

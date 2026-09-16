@@ -137,11 +137,11 @@ export async function POST(
         })
         .eq('id', batch.id);
 
-      return NextResponse.json({ error: 'Failed to send messages' }, { status: 500 });
+      return NextResponse.json({ error: sendError.message || 'Failed to send messages' }, { status: 500 });
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('API Error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -39,9 +39,91 @@ export default async function ImportsPage() {
         <p className="text-muted-foreground mt-1">View the history of your contact imports and troubleshoot any issues.</p>
       </div>
 
-      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-3">
+        {logs.map((log) => (
+          <div key={log.id} className="rounded-xl border bg-card p-4 shadow-sm space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="font-medium text-foreground truncate">{log.file_name}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{formatDateTime(log.imported_at)}</div>
+              </div>
+              <span
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize flex-shrink-0 ${
+                  log.status === 'completed'
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                    : log.status === 'failed'
+                    ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                }`}
+              >
+                {log.status}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-4 gap-2 pt-2 border-t text-xs text-center">
+              <div>
+                <div className="text-muted-foreground">Total</div>
+                <div className="font-semibold tabular-nums mt-0.5">{formatNumber(log.total_rows)}</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Imported</div>
+                <div className="font-semibold tabular-nums text-green-600 dark:text-green-400 mt-0.5">{formatNumber(log.rows_imported)}</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Updated</div>
+                <div className="font-semibold tabular-nums text-blue-600 dark:text-blue-400 mt-0.5">{formatNumber(log.rows_updated)}</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Skipped</div>
+                <div className="font-semibold tabular-nums text-amber-600 dark:text-amber-400 mt-0.5">{formatNumber(log.rows_skipped)}</div>
+              </div>
+            </div>
+
+            {(log.errors?.length > 0 || log.warnings?.length > 0) && (
+              <details className="pt-2 border-t text-xs">
+                <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                  View details ({log.errors?.length || 0} errors, {log.warnings?.length || 0} warnings)
+                </summary>
+                <div className="mt-2 space-y-2 pl-2 border-l-2 border-muted max-h-48 overflow-y-auto">
+                  {log.errors?.slice(0, 10).map((err, i) => (
+                    <div key={i} className="text-destructive">
+                      <strong>Row {err.row}:</strong> {err.reason}
+                      {err.field && <span> (Field: {err.field})</span>}
+                    </div>
+                  ))}
+                  {log.errors?.length > 10 && (
+                    <div className="text-muted-foreground italic">
+                      ...and {log.errors.length - 10} more errors
+                    </div>
+                  )}
+                  {log.warnings?.slice(0, 10).map((warn, i) => (
+                    <div key={i} className="text-amber-600 dark:text-amber-400">
+                      <strong>Row {warn.row}:</strong> {warn.reason}
+                      {warn.field && <span> (Field: {warn.field})</span>}
+                    </div>
+                  ))}
+                  {log.warnings?.length > 10 && (
+                    <div className="text-muted-foreground italic">
+                      ...and {log.warnings.length - 10} more warnings
+                    </div>
+                  )}
+                </div>
+              </details>
+            )}
+          </div>
+        ))}
+        {!logs.length && (
+          <div className="rounded-xl border bg-card p-8 text-center text-muted-foreground text-sm">
+            No import logs found.
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden md:block rounded-xl border bg-card shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
+          <table className="w-full min-w-[700px] text-sm text-left whitespace-nowrap">
             <thead className="bg-muted/50 text-muted-foreground">
               <tr>
                 <th className="px-6 py-3 font-medium">File Name</th>

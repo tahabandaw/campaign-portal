@@ -259,7 +259,7 @@ async function DashboardCampaignsSection({
 
   return (
     <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-      <div className="p-6 border-b flex items-center justify-between">
+      <div className="p-4 sm:p-6 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">Campaign Performance</h2>
           <p className="text-xs text-muted-foreground">
@@ -268,7 +268,7 @@ async function DashboardCampaignsSection({
         </div>
         <Link
           href="/campaigns"
-          className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
+          className="text-xs font-medium text-primary hover:underline flex items-center gap-1 self-start sm:self-auto"
         >
           <span>View all {totalCampaigns} campaigns</span>
           <ArrowUpRight className="w-3.5 h-3.5" />
@@ -276,7 +276,7 @@ async function DashboardCampaignsSection({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[700px] text-sm whitespace-nowrap">
           <thead className="bg-muted/40 border-b text-xs text-muted-foreground font-medium">
             <tr>
               <th className="py-3 px-6 text-left">Campaign</th>

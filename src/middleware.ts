@@ -34,9 +34,17 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // If OAuth code is received on any route (e.g. root fallback), forward to auth callback
+  if (request.nextUrl.searchParams.has('code') && request.nextUrl.pathname !== '/auth/callback') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/auth/callback';
+    return NextResponse.redirect(url);
+  }
+
   // Public routes that don't need auth
   const isPublicRoute =
     request.nextUrl.pathname === '/login' ||
+    request.nextUrl.pathname === '/auth/callback' ||
     request.nextUrl.pathname.startsWith('/share/') ||
     request.nextUrl.pathname.startsWith('/api/share/') ||
     request.nextUrl.pathname.startsWith('/api/cron/');

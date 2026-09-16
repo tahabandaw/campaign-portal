@@ -61,10 +61,10 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
   const opensExceedDelivered = campaign.reported_opens > campaign.reported_delivered;
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 sm:space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{campaign.campaign_name}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{campaign.campaign_name}</h1>
           <div className="flex items-center mt-2 space-x-2 text-sm text-muted-foreground">
             <span
               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
@@ -79,7 +79,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             <span>Sent: {campaign.sent_at_utc ? formatDateTime(campaign.sent_at_utc) : 'Not sent'}</span>
           </div>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-3 flex-wrap">
           {isOwner && (
             <>
               <ShareResultsButton campaignId={campaign.id} isOwner={isOwner} />
@@ -95,7 +95,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <div className="rounded-xl border bg-card p-6 shadow-sm">
           <h3 className="text-sm font-medium text-muted-foreground">Sent</h3>
           <p className="text-3xl font-semibold mt-2 tabular-nums">{formatNumber(campaign.reported_sent)}</p>
@@ -135,35 +135,37 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
         <div>
           <h2 className="text-xl font-bold tracking-tight mb-4">Send History</h2>
           <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-muted/50 text-muted-foreground">
-                <tr>
-                  <th className="px-6 py-3 font-medium">Status</th>
-                  <th className="px-6 py-3 font-medium text-right">Recipients</th>
-                  <th className="px-6 py-3 font-medium text-right">Queued At</th>
-                  <th className="px-6 py-3 font-medium text-right">Sent At</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {sendBatches?.map((batch) => (
-                  <tr key={batch.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-6 py-4 font-medium capitalize">
-                      {batch.status}
-                    </td>
-                    <td className="px-6 py-4 text-right tabular-nums">{formatNumber(batch.recipient_count)}</td>
-                    <td className="px-6 py-4 text-right text-muted-foreground">{formatDateTime(batch.queued_at)}</td>
-                    <td className="px-6 py-4 text-right text-muted-foreground">{formatDateTime(batch.sent_at)}</td>
-                  </tr>
-                ))}
-                {!sendBatches?.length && (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[500px] text-sm text-left whitespace-nowrap">
+                <thead className="bg-muted/50 text-muted-foreground">
                   <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">
-                      No send history found.
-                    </td>
+                    <th className="px-6 py-3 font-medium">Status</th>
+                    <th className="px-6 py-3 font-medium text-right">Recipients</th>
+                    <th className="px-6 py-3 font-medium text-right">Queued At</th>
+                    <th className="px-6 py-3 font-medium text-right">Sent At</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y">
+                  {sendBatches?.map((batch) => (
+                    <tr key={batch.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-6 py-4 font-medium capitalize">
+                        {batch.status}
+                      </td>
+                      <td className="px-6 py-4 text-right tabular-nums">{formatNumber(batch.recipient_count)}</td>
+                      <td className="px-6 py-4 text-right text-muted-foreground">{formatDateTime(batch.queued_at)}</td>
+                      <td className="px-6 py-4 text-right text-muted-foreground">{formatDateTime(batch.sent_at)}</td>
+                    </tr>
+                  ))}
+                  {!sendBatches?.length && (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">
+                        No send history found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -171,35 +173,37 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
           <div>
             <h2 className="text-xl font-bold tracking-tight mb-4">Share Links</h2>
             <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-muted/50 text-muted-foreground">
-                  <tr>
-                    <th className="px-6 py-3 font-medium">Created At</th>
-                    <th className="px-6 py-3 font-medium">Expires At</th>
-                    <th className="px-6 py-3 font-medium">Link</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {shares?.map((share) => (
-                    <tr key={share.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-6 py-4 text-muted-foreground">{formatDateTime(share.created_at)}</td>
-                      <td className="px-6 py-4 text-muted-foreground">{formatDateTime(share.expires_at)}</td>
-                      <td className="px-6 py-4 text-muted-foreground">
-                        <code className="bg-muted px-2 py-1 rounded">
-                          /share/{share.token}
-                        </code>
-                      </td>
-                    </tr>
-                  ))}
-                  {!shares?.length && (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[500px] text-sm text-left whitespace-nowrap">
+                  <thead className="bg-muted/50 text-muted-foreground">
                     <tr>
-                      <td colSpan={3} className="px-6 py-8 text-center text-muted-foreground">
-                        No share links created.
-                      </td>
+                      <th className="px-6 py-3 font-medium">Created At</th>
+                      <th className="px-6 py-3 font-medium">Expires At</th>
+                      <th className="px-6 py-3 font-medium">Link</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y">
+                    {shares?.map((share) => (
+                      <tr key={share.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="px-6 py-4 text-muted-foreground">{formatDateTime(share.created_at)}</td>
+                        <td className="px-6 py-4 text-muted-foreground">{formatDateTime(share.expires_at)}</td>
+                        <td className="px-6 py-4 text-muted-foreground">
+                          <code className="bg-muted px-2 py-1 rounded">
+                            /share/{share.token}
+                          </code>
+                        </td>
+                      </tr>
+                    ))}
+                    {!shares?.length && (
+                      <tr>
+                        <td colSpan={3} className="px-6 py-8 text-center text-muted-foreground">
+                          No share links created.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}

@@ -20,7 +20,7 @@ import 'dotenv/config';
 import dns from 'node:dns';
 dns.setDefaultResultOrder('ipv4first');
 import { describe, it, expect, beforeAll } from 'vitest';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -40,12 +40,20 @@ function createAnonClient() {
   return createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
-async function createAuthenticatedClient(email: string, password: string) {
+const authenticatedClientCache = new Map<string, SupabaseClient>();
+
+async function createAuthenticatedClient(email: string, password: string): Promise<SupabaseClient> {
+  const cached = authenticatedClientCache.get(email);
+  if (cached) {
+    return cached;
+  }
   const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   const { error } = await client.auth.signInWithPassword({ email, password });
   if (error) throw new Error(`Auth failed for ${email}: ${error.message}`);
+  authenticatedClientCache.set(email, client);
   return client;
 }
+
 
 describe('Brand Data Isolation', () => {
   let kileleBrandId: string;

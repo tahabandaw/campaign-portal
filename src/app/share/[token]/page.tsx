@@ -55,14 +55,14 @@ export default function SharePage({ params }: { params: Promise<{ token: string 
   if (verified && campaign) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
-        <main className="flex-grow max-w-4xl w-full mx-auto p-6 md:p-12">
-          <div className="bg-white rounded-xl shadow-sm border p-8">
-            <h1 className="text-3xl font-bold mb-2">{campaign.campaign_name}</h1>
-            <p className="text-gray-500 mb-8">
+        <main className="flex-grow max-w-4xl w-full mx-auto p-4 sm:p-6 md:p-12">
+          <div className="bg-white rounded-xl shadow-sm border p-5 sm:p-8">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">{campaign.campaign_name}</h1>
+            <p className="text-gray-500 mb-6 sm:mb-8 text-sm sm:text-base">
               Channel: <span className="uppercase">{campaign.channel}</span> • Sent: {formatDate(campaign.sent_at)}
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               <div className="p-4 border rounded-lg bg-gray-50">
                 <p className="text-sm text-gray-500 mb-1">Sent</p>
                 <p className="text-2xl font-semibold">{formatNumber(campaign.metrics.sent)}</p>

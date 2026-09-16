@@ -7,12 +7,5 @@
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
-  },
-  "vars": {
-    "NEXT_PUBLIC_SUPABASE_URL": "https://pvwaujpkamfljnqwoihz.supabase.co",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2d2F1anBrYW1mbGpucXdvaWh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0MzU4MzgsImV4cCI6MjEwNTAxMTgzOH0.AS6uDJQFIJ5oWnElBxs4vDzBh0NRuUggJUUhda_er9E",
-    "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2d2F1anBrYW1mbGpucXdvaWh6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4OTQzNTgzOCwiZXhwIjoyMTA1MDExODM4fQ.87-9dKKYB_dGDlMLbOx3rkpDOLiVNnhnPp4dLSxuUvs",
-    "DISPATCHER_API_KEY": "vgk_59a3fe7d3d70067c0b677570fbdefb1a333c66a7e981c0a0",
-    "CRON_SECRET": "vg_cron_secret_2026_portal"
   }
 }

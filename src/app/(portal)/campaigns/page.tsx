@@ -39,9 +39,73 @@ export default async function CampaignsPage() {
         </div>
       </div>
 
-      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-3">
+        {campaigns?.map((campaign) => (
+          <Link
+            key={campaign.id}
+            href={`/campaigns/${campaign.id}`}
+            className="block rounded-xl border bg-card p-4 shadow-sm hover:border-primary/50 transition-colors"
+          >
+            <div className="flex items-start justify-between gap-2 mb-3">
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-foreground truncate">
+                  {campaign.campaign_name}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {campaign.sent_at_utc ? formatDate(campaign.sent_at_utc) : 'Not sent'}
+                </p>
+              </div>
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize flex-shrink-0 ${
+                  campaign.channel === 'email'
+                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                    : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                }`}
+              >
+                {campaign.channel}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 pt-3 border-t text-xs">
+              <div>
+                <div className="text-muted-foreground">Sent</div>
+                <div className="font-semibold tabular-nums mt-0.5">{formatNumber(campaign.reported_sent)}</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Delivered</div>
+                <div className="font-semibold tabular-nums mt-0.5">{formatNumber(campaign.reported_delivered)}</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Spend</div>
+                <div className="font-semibold tabular-nums mt-0.5">{formatCurrency(campaign.spend)}</div>
+              </div>
+              <div className="pt-1">
+                <div className="text-muted-foreground">Opens</div>
+                <div className="font-semibold tabular-nums mt-0.5">{formatNumber(campaign.reported_opens)}</div>
+              </div>
+              <div className="pt-1">
+                <div className="text-muted-foreground">Clicks</div>
+                <div className="font-semibold tabular-nums mt-0.5">{formatNumber(campaign.reported_clicks)}</div>
+              </div>
+              <div className="pt-1">
+                <div className="text-muted-foreground">Bounced</div>
+                <div className="font-semibold tabular-nums mt-0.5">{formatNumber(campaign.reported_bounced)}</div>
+              </div>
+            </div>
+          </Link>
+        ))}
+        {!campaigns?.length && (
+          <div className="rounded-xl border bg-card p-8 text-center text-muted-foreground text-sm">
+            No campaigns found.
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden md:block rounded-xl border bg-card shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
+          <table className="w-full min-w-[750px] text-sm text-left whitespace-nowrap">
             <thead className="bg-muted/50 text-muted-foreground">
               <tr>
                 <th className="px-6 py-3 font-medium">Name</th>

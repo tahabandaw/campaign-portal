@@ -64,11 +64,11 @@ export function ContactsTable({
             placeholder="Search by name or email..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="flex-1 rounded-lg border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="flex-1 min-w-0 rounded-lg border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <button
             type="submit"
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors flex-shrink-0"
           >
             Search
           </button>
@@ -76,39 +76,41 @@ export function ContactsTable({
             <button
               type="button"
               onClick={() => { setSearchInput(''); updateParams({ search: '' }); }}
-              className="rounded-lg border px-3 py-2 text-sm hover:bg-muted transition-colors"
+              className="rounded-lg border px-3 py-2 text-sm hover:bg-muted transition-colors flex-shrink-0"
             >
               Clear
             </button>
           )}
         </form>
-        <select
-          value={statusFilter}
-          onChange={(e) => updateParams({ status: e.target.value })}
-          className="rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="">All statuses</option>
-          <option value="active">Active</option>
-          <option value="bounced">Bounced</option>
-          <option value="unsubscribed">Unsubscribed</option>
-          <option value="pending">Pending</option>
-          <option value="unknown">Unknown</option>
-        </select>
-        <select
-          value={consentFilter}
-          onChange={(e) => updateParams({ consent: e.target.value })}
-          className="rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="">All consent</option>
-          <option value="true">Consented</option>
-          <option value="false">Not consented</option>
-        </select>
+        <div className="flex gap-2">
+          <select
+            value={statusFilter}
+            onChange={(e) => updateParams({ status: e.target.value })}
+            className="flex-1 sm:flex-none rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">All statuses</option>
+            <option value="active">Active</option>
+            <option value="bounced">Bounced</option>
+            <option value="unsubscribed">Unsubscribed</option>
+            <option value="pending">Pending</option>
+            <option value="unknown">Unknown</option>
+          </select>
+          <select
+            value={consentFilter}
+            onChange={(e) => updateParams({ consent: e.target.value })}
+            className="flex-1 sm:flex-none rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">All consent</option>
+            <option value="true">Consented</option>
+            <option value="false">Not consented</option>
+          </select>
+        </div>
       </div>
 
       {/* Table */}
       <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[500px] text-sm whitespace-nowrap">
             <thead>
               <tr className="border-b bg-muted/50">
                 <th className="text-left p-3 font-medium">Name</th>
@@ -158,7 +160,7 @@ export function ContactsTable({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-sm text-muted-foreground">
             Showing {startItem}–{endItem} of {totalCount.toLocaleString()}
           </p>

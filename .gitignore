@@ -42,3 +42,8 @@ next-env.d.ts
 
 # seed data
 /data/
+
+# cloudflare / open-next
+/.open-next/
+/.wrangler/
+
